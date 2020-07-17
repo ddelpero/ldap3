@@ -517,14 +517,15 @@ class Connection(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         with self.connection_lock:
             context_bound, context_closed = self._context_state.pop()
-            if (not context_bound and self.bound) or self.stream:  # restore status prior to entering context
+            if self.bound or self.stream:  # restore status prior to entering context
                 try:
                     self.unbind()
                 except LDAPExceptionError:
                     pass
-
-            if not context_closed and self.closed:
-                self.open()
+                
+#             Don't re-open if we're closed. We're exiting and we want to close the connection
+#             if not context_closed and self.closed:
+#                 self.open()
 
             if exc_type is not None:
                 if log_enabled(ERROR):
